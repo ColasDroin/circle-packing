@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Circle:
     """A little class representing an SVG circle."""
 
@@ -15,20 +16,26 @@ class Circle:
     def overlap_with(self, cx, cy, r):
         """Does the circle overlap with another of radius r at (cx, cy)?"""
 
-        d = np.hypot(cx-self.cx, cy-self.cy)
+        d = np.hypot(cx - self.cx, cy - self.cy)
         return d < r + self.r
 
     def draw_circle(self, fo):
         """Write the circle's SVG to the output stream, fo."""
 
-        print('<circle cx="{}" cy="{}" r="{}" class="c{}"/>'
-            .format(self.cx, self.cy, self.r, self.icolour), file=fo)
+        print(
+            '<circle cx="{}" cy="{}" r="{}" class="c{}"/>'.format(
+                self.cx, self.cy, self.r, self.icolour
+            ),
+            file=fo,
+        )
+
 
 class Circles:
     """A class for drawing circles-inside-a-circle."""
-    
-    def __init__(self, width=600, height=600, R=250, n=800, rho_min=0.005,
-                 rho_max=0.05, colours=None):
+
+    def __init__(
+        self, width=600, height=600, R=250, n=800, rho_min=0.005, rho_max=0.05, colours=None
+    ):
         """Initialize the Circles object.
 
         width, height are the SVG canvas dimensions
@@ -47,7 +54,7 @@ class Circles:
         # The centre of the canvas
         self.CX, self.CY = self.width // 2, self.height // 2
         self.rmin, self.rmax = R * rho_min, R * rho_max
-        self.colours = colours or ['#993300', '#a5c916', '#00AA66', '#FF9900']
+        self.colours = colours or ["#993300", "#a5c916", "#00AA66", "#FF9900"]
         self.circles = []
         # The "guard number": we try to place any given circle this number of
         # times before giving up.
@@ -56,48 +63,59 @@ class Circles:
     def preamble(self):
         """The usual SVG preamble, including the image size."""
 
-        print('<?xml version="1.0" encoding="utf-8"?>\n'
-
-        '<svg xmlns="http://www.w3.org/2000/svg"\n' + ' '*5 +
-          'xmlns:xlink="http://www.w3.org/1999/xlink" width="{}" height="{}" >'
-                .format(self.width, self.height), file=self.fo)
+        print(
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            '<svg xmlns="http://www.w3.org/2000/svg"\n'
+            + " " * 5
+            + 'xmlns:xlink="http://www.w3.org/1999/xlink" width="{}" height="{}" >'.format(
+                self.width, self.height
+            ),
+            file=self.fo,
+        )
 
     def defs_decorator(func):
         """For convenience, wrap the CSS styles with the needed SVG tags."""
 
         def wrapper(self):
-            print("""
+            print(
+                """
             <defs>
-            <style type="text/css"><![CDATA[""", file=self.fo)
+            <style type="text/css"><![CDATA[""",
+                file=self.fo,
+            )
 
             func(self)
 
-            print("""]]></style>
-            </defs>""", file=self.fo)
+            print(
+                """]]></style>
+            </defs>""",
+                file=self.fo,
+            )
+
         return wrapper
 
     @defs_decorator
     def svg_styles(self):
         """Set the SVG styles: circles are coloured with no border."""
 
-        print('circle {stroke: none;}', file=self.fo)
+        print("circle {stroke: none;}", file=self.fo)
         for i, c in enumerate(self.colours):
-            print('.c{} {{fill: {};}}'.format(i, c), file=self.fo)
+            print(".c{} {{fill: {};}}".format(i, c), file=self.fo)
 
     def make_svg(self, filename, *args, **kwargs):
         """Create the image as an SVG file with name filename."""
 
         ncolours = len(self.colours)
-        with open(filename, 'w') as self.fo:
+        with open(filename, "w") as self.fo:
             self.preamble()
             self.svg_styles()
             for circle in self.circles:
                 circle.draw_circle(self.fo)
-            print('</svg>', file=self.fo)
+            print("</svg>", file=self.fo)
 
     def _place_circle(self, r, c_idx=None):
         """Attempt to place a circle of radius r within the larger circle.
-        
+
         c_idx is a list of indexes into the self.colours list, from which
         the circle's colour will be chosen. If None, use all colours.
 
@@ -111,25 +129,27 @@ class Circles:
         guard = self.guard
         while guard:
             # Pick a random position, uniformly on the larger circle's interior
-            cr, cphi = ( self.R * np.sqrt(np.random.random()),
-                         2*np.pi * np.random.random() )
+            cr, cphi = (self.R * np.sqrt(np.random.random()), 2 * np.pi * np.random.random())
             cx, cy = cr * np.cos(cphi), cr * np.sin(cphi)
-            if cr+r < self.R:
-            # The circle fits inside the larger circle.
-                if not any(circle.overlap_with(self.CX+cx, self.CY+cy, r)
-                                    for circle in self.circles):
+            if cr + r < self.R:
+                # The circle fits inside the larger circle.
+                if not any(
+                    circle.overlap_with(self.CX + cx, self.CY + cy, r) for circle in self.circles
+                ):
                     # The circle doesn't overlap any other circle: place it.
-                    circle = Circle(cx+self.CX, cy+self.CY, r,
-                                    icolour=np.random.choice(c_idx))
+                    circle = Circle(cx + self.CX, cy + self.CY, r, icolour=np.random.choice(c_idx))
                     self.circles.append(circle)
+                    # print("Circle placed at ({}, {}) with radius {}.".format(cx, cy, r))
                     return True
+                else:
+                    print("Overlap detected.")
             guard -= 1
         # Warn that we reached the guard number of attempts and gave up for
         # for this circle.
-        print('guard reached.')
+        print("guard reached.")
         return False
 
-    def make_circles(self, c_idx=None):
+    def make_circles(self, c_idx=None, array_radius=None):
         """Place the little circles inside the big one.
 
         c_idx is a list of colour indexes (into the self.colours list) from
@@ -138,21 +158,25 @@ class Circles:
 
         """
 
-        # First choose a set of n random radii and sort them. We use
-        # random.random() * random.random() to favour small circles.
-        r = self.rmin + (self.rmax - self.rmin) * np.random.random(
-                                self.n) * np.random.random(self.n)
+        if array_radius is not None:
+            r = array_radius
+        else:
+            # First choose a set of n random radii and sort them. We use
+            # random.random() * random.random() to favour small circles.
+            r = self.rmin + (self.rmax - self.rmin) * np.random.random(self.n) * np.random.random(
+                self.n
+            )
         r[::-1].sort()
+
         # Do our best to place the circles, larger ones first.
         nplaced = 0
-        for i in range(self.n):
+        for i in range(r.shape[0]):
             if self._place_circle(r[i], c_idx):
                 nplaced += 1
-        print('{}/{} circles placed successfully.'.format(nplaced, self.n))
-                
+        print("{}/{} circles placed successfully.".format(nplaced, self.n))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     circles = Circles(n=2000)
     circles.make_circles()
-    circles.make_svg('circles.svg')
-
+    circles.make_svg("circles.svg")
