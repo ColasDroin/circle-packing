@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from circles import Circle, Circles
 from PIL import Image
+
+from .circles import Circle, Circles
 
 
 class ShapeFill(Circles):
