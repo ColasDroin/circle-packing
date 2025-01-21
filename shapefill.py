@@ -101,17 +101,17 @@ class ShapeFill(Circles):
 if __name__ == "__main__":
     # Get array of radius
     array_radius = pd.read_csv("../radii.csv")["amount"].values
-    array_radius_rescaled = np.emath.logn(1.1, array_radius) / 20
+    array_ids = pd.read_csv("../radii.csv")["id"].values
+    array_radius_rescaled = np.emath.logn(1.1, array_radius) / 45
     shape = ShapeFill("flag_upscaled.png")
     # shape.read_image("flag.png")
     shape.img = 255 - shape.img
     shape.guard = 1000
-    print(array_radius_rescaled)
     shape.make_circles(array_radius=array_radius_rescaled)
     shape.make_svg("flag_upscaled.svg")
     # Write output to json
     l_circle = []
-    for circle in shape.circles:
-        l_circle.append([circle.cx, circle.cy, circle.r])
-    df_circle = pd.DataFrame(l_circle, columns=["cx", "cy", "r"])
+    for circle, id, unrounded_r in zip(shape.circles, array_ids, array_radius_rescaled):
+        l_circle.append([id, circle.cx, circle.cy, unrounded_r])
+    df_circle = pd.DataFrame(l_circle, columns=["id", "cx", "cy", "r"])
     df_circle.to_json("circle.json", orient="records")

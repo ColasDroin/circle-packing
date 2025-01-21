@@ -166,7 +166,7 @@ class Circles:
             r = self.rmin + (self.rmax - self.rmin) * np.random.random(self.n) * np.random.random(
                 self.n
             )
-        r[::-1].sort()
+        # r[::-1].sort()
 
         # Do our best to place the circles, larger ones first.
         nplaced = 0
